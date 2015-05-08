@@ -1,11 +1,6 @@
-import {Socket} from "phoenix"
+var GazeApp = require("./components/GazeApp");
 
-// let socket = new Socket("/ws")
-// socket.connect()
-// socket.join("topic:subtopic", {}).receive("ok", chan => {
-// })
-
-let App = {
-}
-
-export default App
+React.render(
+  <GazeApp />,
+  document.getElementById("gaze")
+);

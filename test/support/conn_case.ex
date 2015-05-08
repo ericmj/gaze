@@ -28,7 +28,7 @@ defmodule Gaze.ConnCase do
     end
   end
 
-  setup tags do
+  setup do
 
     :ok
   end

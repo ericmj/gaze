@@ -7,25 +7,23 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Phoenix!</title>
+    <title>Hello Gaze!</title>
+    <%= if Mix.env == :dev do %>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.css">
+      <script src="https://fb.me/react-0.13.2.js"></script>
+    <% else %>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+      <script src="https://fb.me/react-0.13.2.min.js"></script>
+    <% end %>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
   <body>
     <div class="container">
-      <div class="header">
-        <ul class="nav nav-pills pull-right">
-          <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
-        </ul>
-        <span class="logo"></span>
-      </div>
-
-      <p class="alert alert-info"><%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger"><%= get_flash(@conn, :error) %></p>
 
       <%= @inner %>
 
-    </div> <!-- /container -->
+    </div>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     <script>require("web/static/js/app")</script>
   </body>
