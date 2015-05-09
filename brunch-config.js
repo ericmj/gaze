@@ -2,15 +2,13 @@ exports.config = {
   // See http://brunch.io/#documentation for docs.
   files: {
     javascripts: {
-      joinTo: 'js/app.js'
-      // To change the order of concatenation of files, explictly mention here
-      // https://github.com/brunch/brunch/tree/stable/docs#concatenation
-      // order: {
-      //   before: [
-      //     'web/static/vendor/js/jquery-2.1.1.js',
-      //     'web/static/vendor/js/bootstrap.min.js'
-      //   ]
-      // }
+      joinTo: 'js/app.js',
+      order: {
+        before: [
+          /^bower_components/,
+          /^web\/static\/vendor/
+        ]
+      }
     },
     stylesheets: {
       joinTo: 'css/app.css'
@@ -20,20 +18,13 @@ exports.config = {
     }
   },
 
-  // Phoenix paths configuration
+  conventions: {vendor: []},
+
   paths: {
     // Which directories to watch
     watched: ["web/static", "test/static"],
 
     // Where to compile files to
     public: "priv/static"
-  },
-
-  // Configure your plugins
-  plugins: {
-    ES6to5: {
-      // Do not use ES6 compiler in vendor code
-      ignore: [/^(web\/static\/vendor)/]
-    }
   }
 };

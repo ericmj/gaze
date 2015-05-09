@@ -1,4 +1,4 @@
-var GazeApp = require("./components/GazeApp");
+import GazeApp from "./components/GazeApp";
 
 React.render(
   <GazeApp />,

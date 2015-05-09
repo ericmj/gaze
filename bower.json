@@ -1,0 +1,6 @@
+{
+  "name": "gaze",
+  "dependencies": {
+    "classnames": "~2.1.1"
+  }
+}
