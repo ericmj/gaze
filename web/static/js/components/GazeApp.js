@@ -14,8 +14,20 @@ export default React.createClass({
   renderTabs() {
     return this.state.nav.map(tab => {
       var classes = cx({active: tab.active});
-      return <li id={tab.id} className={classes}><a>{tab.value}</a></li>
+      return <li id={tab.id} className={classes}>
+        <a onClick={this.tabClick}>{tab.value}</a>
+      </li>;
     });
+  },
+
+  tabClick(e) {
+    for (var tab of this.state.nav) {
+      if (e.target.parentElement.id == tab.id)
+        tab.active = true;
+      else
+        tab.active = false;
+    }
+    this.setState(this.state);
   },
 
   getInitialState() {
