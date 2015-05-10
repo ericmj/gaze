@@ -1,3 +1,4 @@
+import {Socket} from "../../vendor/phoenix";
 import cx from "bower_components/classnames";
 import System from "./System";
 
@@ -18,7 +19,7 @@ export default React.createClass({
   renderTabs() {
     return this.state.nav.map(tab => {
       var classes = cx({active: tab.active});
-      return <li id={tab.id} className={classes}>
+      return <li key={tab.id} id={tab.id} className={classes}>
         <a onClick={this.tabClick}>{tab.value}</a>
       </li>;
     });
@@ -26,7 +27,7 @@ export default React.createClass({
 
   renderContainer() {
     var component = this.state.active_component
-                  ? <this.state.active_component/>
+                  ? <this.state.active_component socket={this.state.socket}/>
                   : <div/>;
 
     return <div className="container main">
@@ -48,13 +49,17 @@ export default React.createClass({
   },
 
   getInitialState() {
+    var socket = new Socket("/gaze/ws");
+    socket.connect();
+
     return {
       nav: [
         {id: "nav_system",       value: "System",       component: System,  active: true},
         {id: "nav_load_charts",  value: "Load charts",  component: null,    active: false},
         {id: "nav_applications", value: "Applications", component: null,    active: false}
       ],
-      active_component: System
+      active_component: System,
+      socket: socket
     }
   }
 });

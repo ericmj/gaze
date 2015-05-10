@@ -12,10 +12,14 @@ defmodule Gaze.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", Gaze do
+  scope "/gaze", Gaze do
     pipe_through :browser # Use the default browser stack
 
-    get "/gaze", GazeController, :index
+    get "/", GazeController, :index
+  end
+
+  socket "/gaze/ws", Gaze, via: [Phoenix.Transports.WebSocket] do
+    channel "system", SystemChannel
   end
 
   # Other scopes may use custom stacks.

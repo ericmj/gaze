@@ -1,7 +1,3 @@
-<script>
-  window.GAZE_INFO = <%= safe(@info) %>
-</script>
-
 <div id="gaze" class="gaze">
   Loading Gaze...
 </div>

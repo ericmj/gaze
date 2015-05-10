@@ -1,18 +1,19 @@
 export default React.createClass({
   render() {
     return <div>
-      {GAZE_INFO.map(([left, right]) => {
-        return <div className="row">
+      {this.state.panels.map(([left, right]) => {
+        return <div className="row" key={left.name}>
           {this.renderPanel(left)}
           {this.renderPanel(right)}
         </div>
       })}
+      {this.renderTime()}
     </div>;
   },
 
   renderPanel({name, data}) {
     var info = data.map(({name, value}) => {
-      return [<dt>{name}</dt>, <dd>{value}</dd>];
+      return [<dt key={"dt-" + name}>{name}</dt>, <dd key={"dd-" + name}>{value}</dd>];
     });
 
     return <div className="col-md-6">
@@ -25,5 +26,24 @@ export default React.createClass({
         </div>
       </div>
     </div>;
+  },
+
+  renderTime() {
+    return <div>Last update: {this.state.time.toISOString()}</div>;
+  },
+
+  getInitialState() {
+    return {panels: [], time: new Date()}
+  },
+
+  componentWillMount() {
+    this.props.socket.join("system", {})
+      .receive("ok", chan => {
+        chan.on("update", this.update);
+      })
+  },
+
+  update({info}) {
+    this.setState({panels: info, time: new Date()});
   }
 });
