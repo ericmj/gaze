@@ -1,3 +1,6 @@
+import {Socket} from "../../vendor/phoenix";
+import Actions from "../actions";
+
 export default React.createClass({
   render() {
     return <div>
@@ -7,7 +10,6 @@ export default React.createClass({
           {this.renderPanel(right)}
         </div>
       })}
-      {this.renderTime()}
     </div>;
   },
 
@@ -28,9 +30,6 @@ export default React.createClass({
     </div>;
   },
 
-  renderTime() {
-    return <div>Last update: {this.state.time.toISOString()}</div>;
-  },
 
   getInitialState() {
     return {panels: [], time: new Date()}
@@ -39,11 +38,12 @@ export default React.createClass({
   componentWillMount() {
     this.props.socket.join("system", {})
       .receive("ok", chan => {
-        chan.on("update", this.update);
+        chan.on("update", this.onUpdate);
       })
   },
 
-  update({info}) {
-    this.setState({panels: info, time: new Date()});
+  onUpdate({info}) {
+    this.setState({panels: info});
+    Actions.last_update(new Date());
   }
 });
