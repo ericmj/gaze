@@ -1,19 +1,21 @@
 /* Space out content a bit */
-body, form, ul, table {
+body {
   margin-top: 20px;
-  margin-bottom: 20px;
+}
+
+
+/* Fixes strange overflow of row because of margin-right: -15px; */
+.row {
+  width: 100%;
 }
 
 /* Phoenix flash messages */
 .alert:empty { display: none; }
 
-/* Customize container */
-@media (min-width: 768px) {
-  .container {
-    max-width: 730px;
-  }
-}
-
 .nav li a {
   cursor: pointer;
+}
+
+.main {
+  margin-top: 15px;
 }

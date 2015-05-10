@@ -1,8 +1,12 @@
 import cx from "bower_components/classnames";
+import System from "./System";
 
 export default React.createClass({
   render() {
-    return this.renderNav();
+    return <div>
+      {this.renderNav()}
+      {this.renderContainer()}
+    </div>;
   },
 
   renderNav() {
@@ -20,12 +24,25 @@ export default React.createClass({
     });
   },
 
+  renderContainer() {
+    var component = this.state.active_component
+                  ? <this.state.active_component/>
+                  : <div/>;
+
+    return <div className="container main">
+      {component}
+    </div>;
+  },
+
   tabClick(e) {
     for (var tab of this.state.nav) {
-      if (e.target.parentElement.id == tab.id)
+      if (e.target.parentElement.id == tab.id) {
+        this.state.active_component = tab.component;
         tab.active = true;
-      else
+      }
+      else {
         tab.active = false;
+      }
     }
     this.setState(this.state);
   },
@@ -33,10 +50,11 @@ export default React.createClass({
   getInitialState() {
     return {
       nav: [
-        {id: "nav_system", value: "System", active: true},
-        {id: "nav_load_charts", value: "Load charts", active: false},
-        {id: "nav_applications", value: "Applications", active: false}
-      ]
+        {id: "nav_system",       value: "System",       component: System,  active: true},
+        {id: "nav_load_charts",  value: "Load charts",  component: null,    active: false},
+        {id: "nav_applications", value: "Applications", component: null,    active: false}
+      ],
+      active_component: System
     }
   }
 });

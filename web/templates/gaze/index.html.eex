@@ -1,3 +1,9 @@
+<script>
+  window.GAZE_INFO = {
+    system: <%= @system_info |> Poison.encode! |> safe %>
+  }
+</script>
+
 <div id="gaze" class="gaze">
   Loading Gaze...
 </div>
