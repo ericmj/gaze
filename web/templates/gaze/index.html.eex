@@ -1,7 +1,5 @@
 <script>
-  window.GAZE_INFO = {
-    system: <%= @system_info |> Poison.encode! |> safe %>
-  }
+  window.GAZE_INFO = <%= safe(@info) %>
 </script>
 
 <div id="gaze" class="gaze">

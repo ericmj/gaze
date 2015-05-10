@@ -14,10 +14,23 @@ defmodule Gaze.GazeController do
     {"Async thread pool size",  :thread_pool_size}
   ]
 
+  @info_all [
+    {"System and Architecture", @info_system},
+    {"Memory Usage", []}
+  ]
+
   def index(conn, _params) do
     conn
-    |> assign(:system_info, collect(@info_system))
+    |> assign(:info, info(@info_all))
     |> render("index.html")
+  end
+
+  defp info(info) do
+    Enum.map(info, fn {name, data} ->
+      %{name: name, data: collect(data)}
+    end)
+    |> Enum.chunk(2)
+    |> Poison.encode!
   end
 
   defp collect(info) do
