@@ -6,7 +6,7 @@ import Actions from "../actions";
 export default React.createClass({
   componentDidMount() {
     Actions.last_update.listen(last_update => {
-      this.setState({last_update});
+      /*this.setState({last_update});*/
     });
   },
 
@@ -31,10 +31,10 @@ export default React.createClass({
 
     return <div>
       {label}
-      <span className="text-muted pull-right" style={{"margin-right": "15px"}} title="Last update">
+      <span className="text-muted pull-right" style={{marginRight: "15px", display: "none"}} title="Last update">
         {this.state.last_update.toISOString()}
       </span>
-      </div>;
+    </div>;
   },
 
   renderTabs() {
