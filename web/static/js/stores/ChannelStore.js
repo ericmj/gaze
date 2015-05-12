@@ -23,13 +23,14 @@ export default Reflux.createStore({
   },
 
   onJoin(channel) {
-    this._socket.join(channel, {})
-      .receive("ok", chan => {
-        chan.on("update", data => {
-          this.channels[channel] = data;
-          this.trigger(this);
-        });
-      })
+    var chan = this._socket.chan(channel, {});
+
+    chan.join().receive("ok", () => {
+      chan.on("update", data => {
+        this.channels[channel] = data;
+        this.trigger(this);
+      });
+    });
   },
 
   onSocketOpen() {
