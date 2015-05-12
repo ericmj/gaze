@@ -4,13 +4,13 @@ defmodule Gaze.SystemChannel do
   @update_timer 1000
 
   @info_system [
-    {"System Version",          :otp_release},
-    {"ERTS Version",            :version},
+    {"System version",          :otp_release},
+    {"ERTS version",            :version},
     {"Compiled for",            :system_architecture},
-    {"Emulator Wordsize",       {:wordsize, :external}},
-    {"Process Wordsize",        {:wordsize, :internal}},
-    {"Smp Support",             :smp_support},
-    {"Thread Support",          :threads},
+    {"Emulator wordsize",       {:wordsize, :external}},
+    {"Process wordsize",        {:wordsize, :internal}},
+    {"SMP support",             :smp_support},
+    {"Thread support",          :threads},
     {"Async thread pool size",  :thread_pool_size}
   ]
 
@@ -25,8 +25,8 @@ defmodule Gaze.SystemChannel do
 
   @info_cpu [
     {"Logical CPUs",           :logical_processors},
-    {"Online Logical CPUs",    :logical_processors_online},
-    {"Available Logical CPUs", :logical_processors_available},
+    {"Online logical CPUs",    :logical_processors_online},
+    {"Available logical CPUs", :logical_processors_available},
     {"Schedulers",              :schedulers},
     {"Online schedulers",       :schedulers_online},
     {"Available schedulers",    :schedulers_available}
@@ -34,17 +34,17 @@ defmodule Gaze.SystemChannel do
 
   @info_stats [
     {"Up time",       :uptime},
-    {"Max Processes", :process_limit},
+    {"Max processes", :process_limit},
     {"Processes",     :process_count},
-    {"Run Queue",     :run_queue},
-    {"IO Input",      :io_input},
-    {"IO Output",     :io_output}
+    {"Run queue",     :run_queue},
+    {"IO input",      :io_input},
+    {"IO output",     :io_output}
   ]
 
   @info_all [
-    {"System and Architecture", &__MODULE__.system_info/1, @info_system},
-    {"Memory Usage", &__MODULE__.memory_info/1, @info_memory},
-    {"CPU's and Threads", &__MODULE__.cpu_info/1, @info_cpu},
+    {"System and architecture", &__MODULE__.system_info/1, @info_system},
+    {"Memory usage", &__MODULE__.memory_info/1, @info_memory},
+    {"CPUs and threads", &__MODULE__.cpu_info/1, @info_cpu},
     {"Statistics", &__MODULE__.stats_info/1, @info_stats}
   ]
 
