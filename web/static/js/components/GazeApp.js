@@ -1,13 +1,14 @@
-import {Socket} from "../../vendor/phoenix";
+import Reflux from "bower_components/reflux/dist/reflux";
 import cx from "bower_components/classnames";
 import System from "./System";
 import Actions from "../actions";
+import ChannelStore from "../stores/ChannelStore";
 
 export default React.createClass({
-  componentDidMount() {
-    Actions.last_update.listen(last_update => {
-      /*this.setState({last_update});*/
-    });
+  mixins: [Reflux.connect(ChannelStore, "store")],
+
+  componentWillMount() {
+    Actions.connect();
   },
 
   render() {
@@ -25,16 +26,11 @@ export default React.createClass({
   },
 
   renderConnectionStatus() {
-    var label = this.state.connected
-              ? <h4><span className="label label-success pull-right">Connected</span></h4>
-              : <h4><span className="label label-danger pull-right">Disconnected</span></h4>;
+    var label = this.state.store.connected
+              ? <span className="label label-success pull-right">Connected</span>
+              : <span className="label label-danger pull-right">Disconnected</span>;
 
-    return <div>
-      {label}
-      <span className="text-muted pull-right" style={{marginRight: "15px", display: "none"}} title="Last update">
-        {this.state.last_update.toISOString()}
-      </span>
-    </div>;
+    return <div><h4>{label}</h4></div>;
   },
 
   renderTabs() {
@@ -47,8 +43,8 @@ export default React.createClass({
   },
 
   renderContainer() {
-    var component = this.state.active_component
-                  ? <this.state.active_component socket={this.state.socket}/>
+    var component = this.state.activeComponent
+                  ? <this.state.activeComponent/>
                   : <div/>;
 
     return <div className="container main">
@@ -57,43 +53,29 @@ export default React.createClass({
   },
 
   getInitialState() {
-    var socket = new Socket("/gaze/ws");
-    socket.connect();
-    socket.onOpen(this.onSocketOpen);
-    socket.onClose(this.onSocketClose);
-    socket.onError(this.onSocketClose);
-
     return {
       nav: [
         {id: "nav_system",       value: "System",       component: System,  active: true},
         {id: "nav_load_charts",  value: "Load charts",  component: null,    active: false},
         {id: "nav_applications", value: "Applications", component: null,    active: false}
       ],
-      active_component: System,
-      socket: socket,
-      connected: false,
-      last_update: new Date()
+      activeComponent: System
     }
   },
 
   onTabClick(e) {
+    var activeComponent;
+
     var nav = this.state.nav.map(tab => {
       if (e.target.parentElement.id == tab.id) {
-        var active_component = tab.component;
+        activeComponent = tab.component;
         tab.active = true;
       }
       else {
         tab.active = false;
       }
+      return tab;
     });
-    this.setState({nav, active_component});
-  },
-
-  onSocketOpen() {
-    this.setState({connected: true});
-  },
-
-  onSocketClose() {
-    this.setState({connected: false});
+    this.setState({nav, activeComponent});
   },
 });

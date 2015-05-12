@@ -1,10 +1,20 @@
-import {Socket} from "../../vendor/phoenix";
+import Reflux from "bower_components/reflux/dist/reflux";
+import ChannelStore from "../stores/ChannelStore";
 import Actions from "../actions";
 
 export default React.createClass({
+  mixins: [Reflux.connect(ChannelStore, "store")],
+
+  componentWillMount() {
+    Actions.join("system");
+  },
+
   render() {
+    var channel = this.state.store.channels.system;
+    if (!channel) return <div/>;
+
     return <div>
-      {this.state.panels.map(([left, right]) => {
+      {channel.info.map(([left, right]) => {
         return <div className="row" key={left.name}>
           {this.renderPanel(left)}
           {this.renderPanel(right)}
@@ -28,22 +38,5 @@ export default React.createClass({
         </div>
       </div>
     </div>;
-  },
-
-
-  getInitialState() {
-    return {panels: [], time: new Date()}
-  },
-
-  componentWillMount() {
-    this.props.socket.join("system", {})
-      .receive("ok", chan => {
-        chan.on("update", this.onUpdate);
-      })
-  },
-
-  onUpdate({info}) {
-    this.setState({panels: info});
-    Actions.last_update(new Date());
   }
 });
