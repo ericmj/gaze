@@ -14,12 +14,17 @@ export default React.createClass({
     if (!channel) return <div/>;
 
     return <div>
-      {channel.info.map(([left, right]) => {
+      {channel.panels.map(([left, right]) => {
         return <div className="row" key={left.name}>
           {this.renderPanel(left)}
           {this.renderPanel(right)}
         </div>
       })}
+      <div className="row">
+        <div className="col-md-12">
+          {this.renderAlloc(channel.alloc)}
+        </div>
+      </div>
     </div>;
   },
 
@@ -36,6 +41,32 @@ export default React.createClass({
             {info}
           </dl>
         </div>
+      </div>
+    </div>;
+  },
+
+  renderAlloc(rows) {
+    return <div className="panel panel-default">
+      <div className="panel-heading">Allocators</div>
+      <div className="panel-body">
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Block size</th>
+              <th>Carrier size</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(([type, block, carrier]) => {
+              return <tr>
+                <th>{type}</th>
+                <td>{block}</td>
+                <td>{carrier}</td>
+              </tr>
+            })}
+          </tbody>
+        </table>
       </div>
     </div>;
   }
