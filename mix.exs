@@ -28,8 +28,9 @@ defmodule Gaze.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [{:phoenix, "~> 0.12"},
-     {:phoenix_live_reload, "~> 0.3"},
+    [{:phoenix, "~> 0.13"},
+     {:phoenix_live_reload, "~> 0.4", only: :dev},
+     {:phoenix_html, "~> 1.0"},
      {:cowboy, "~> 1.0"}]
   end
 end
