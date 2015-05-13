@@ -2,6 +2,45 @@ import Reflux from "bower_components/reflux/dist/reflux";
 import ChannelStore from "../stores/ChannelStore";
 import Actions from "../actions";
 
+const SYSTEM_HEADERS = [
+  "System version",
+  "ERTS version",
+  "Compiled for",
+  "Emulator wordsize",
+  "Process wordsize",
+  "SMP support",
+  "Thread support",
+  "Async thread pool size"
+]
+
+const MEMORY_HEADERS = [
+  "Total",
+  "Processes",
+  "Atoms",
+  "Binaries",
+  "Code",
+  "ETS"
+]
+
+const CPU_HEADERS = [
+  "Logical CPUs",
+  "Online logical CPUs",
+  "Available logical CPUs",
+  "Schedulers",
+  "Online schedulers",
+  "Available schedulers"
+]
+
+const STATS_HEADERS = [
+  "Up time",
+  "Max processes",
+  "Processes",
+  "Run queue",
+  "IO input",
+  "IO output"
+]
+
+
 export default React.createClass({
   mixins: [Reflux.connect(ChannelStore, "store")],
 
@@ -12,33 +51,37 @@ export default React.createClass({
   render() {
     var channel = this.state.store.channels.system;
     if (!channel) return <div/>;
+    var panels = channel.panels;
 
     return <div>
-      {channel.panels.map(([left, right]) => {
-        return <div className="row" key={left.name}>
-          {this.renderPanel(left)}
-          {this.renderPanel(right)}
-        </div>
-      })}
       <div className="row">
-        <div className="col-md-12">
-          {this.renderAlloc(channel.alloc)}
-        </div>
+        {this.renderPanel("System and architecture", SYSTEM_HEADERS, panels[0])}
+        {this.renderPanel("Memory usage", MEMORY_HEADERS, panels[1])}
+      </div>
+      <div className="row">
+        {this.renderPanel("CPUs and threads", CPU_HEADERS, panels[2])}
+        {this.renderPanel("Statistics", STATS_HEADERS, panels[3])}
+      </div>
+      <div className="row">
+        {this.renderAlloc(channel.alloc)}
       </div>
     </div>;
   },
 
-  renderPanel({name, data}) {
-    var info = data.map(({name, value}) => {
-      return [<dt key={"dt-" + name}>{name}</dt>, <dd key={"dd-" + name}>{value}</dd>];
+  renderPanel(title, headers, data) {
+    var dl = headers.map((header, i) => {
+      return [
+        <dt key={"dt-" + i}>{header}</dt>,
+        <dd key={"dd-" + i}>{data[i]}</dd>
+      ];
     });
 
     return <div className="col-md-6">
       <div className="panel panel-default">
-        <div className="panel-heading">{name}</div>
+        <div className="panel-heading">{title}</div>
         <div className="panel-body">
           <dl className="dl-horizontal">
-            {info}
+            {dl}
           </dl>
         </div>
       </div>
@@ -46,27 +89,29 @@ export default React.createClass({
   },
 
   renderAlloc(rows) {
-    return <div className="panel panel-default">
-      <div className="panel-heading">Allocators</div>
-      <div className="panel-body">
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Block size</th>
-              <th>Carrier size</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([type, block, carrier]) => {
-              return <tr>
-                <th>{type}</th>
-                <td>{block}</td>
-                <td>{carrier}</td>
+    return <div className="col-md-12">
+      <div className="panel panel-default">
+        <div className="panel-heading">Allocators</div>
+        <div className="panel-body">
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Block size</th>
+                <th>Carrier size</th>
               </tr>
-            })}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map(([type, block, carrier], i) => {
+                return <tr key={i}>
+                  <th>{type}</th>
+                  <td>{block}</td>
+                  <td>{carrier}</td>
+                </tr>
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>;
   }

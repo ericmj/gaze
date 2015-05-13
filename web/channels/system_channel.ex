@@ -4,48 +4,48 @@ defmodule Gaze.SystemChannel do
   @update_timer 1000
 
   @info_system [
-    {"System version",          :otp_release},
-    {"ERTS version",            :version},
-    {"Compiled for",            :system_architecture},
-    {"Emulator wordsize",       {:wordsize, :external}},
-    {"Process wordsize",        {:wordsize, :internal}},
-    {"SMP support",             :smp_support},
-    {"Thread support",          :threads},
-    {"Async thread pool size",  :thread_pool_size}
+    :otp_release,
+    :version,
+    :system_architecture,
+    {:wordsize, :external},
+    {:wordsize, :internal},
+    :smp_support,
+    :threads,
+    :thread_pool_size
   ]
 
   @info_memory [
-    {"Total",     :total},
-    {"Processes", :processes},
-    {"Atoms",     :atom},
-    {"Binaries",  :binary},
-    {"Code",      :code},
-    {"ETS",       :ets}
+    :total,
+    :processes,
+    :atom,
+    :binary,
+    :code,
+    :ets
   ]
 
   @info_cpu [
-    {"Logical CPUs",            :logical_processors},
-    {"Online logical CPUs",     :logical_processors_online},
-    {"Available logical CPUs",  :logical_processors_available},
-    {"Schedulers",              :schedulers},
-    {"Online schedulers",       :schedulers_online},
-    {"Available schedulers",    :schedulers_available}
+    :logical_processors,
+    :logical_processors_online,
+    :logical_processors_available,
+    :schedulers,
+    :schedulers_online,
+    :schedulers_available
   ]
 
   @info_stats [
-    {"Up time",       :uptime},
-    {"Max processes", :process_limit},
-    {"Processes",     :process_count},
-    {"Run queue",     :run_queue},
-    {"IO input",      :io_input},
-    {"IO output",     :io_output}
+    :uptime,
+    :process_limit,
+    :process_count,
+    :run_queue,
+    :io_input,
+    :io_output
   ]
 
   @info_all [
-    {"System and architecture", &__MODULE__.system_info/1, @info_system},
-    {"Memory usage", &__MODULE__.memory_info/1, @info_memory},
-    {"CPUs and threads", &__MODULE__.cpu_info/1, @info_cpu},
-    {"Statistics", &__MODULE__.stats_info/1, @info_stats}
+    {@info_system,  &__MODULE__.system_info/1},
+    {@info_memory,  &__MODULE__.memory_info/1},
+    {@info_cpu,     &__MODULE__.cpu_info/1},
+    {@info_stats,   &__MODULE__.stats_info/1}
   ]
 
   def join("system", _msg, socket) do
@@ -64,11 +64,9 @@ defmodule Gaze.SystemChannel do
   end
 
   defp panels(info) do
-    Enum.map(info, fn {name, fun, data} ->
-      data = for {name, key} <- data, do: %{name: name, value: fun.(key)}
-      %{name: name, data: data}
+    Enum.map(info, fn {data, fun} ->
+      Enum.map(data, fun)
     end)
-    |> Enum.chunk(2, 2, [])
   end
 
   defp alloc do
