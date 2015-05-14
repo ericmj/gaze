@@ -18,13 +18,16 @@ exports.config = {
     }
   },
 
-  conventions: {vendor: []},
+  conventions: {
+    ignored: [
+      /^bower_components\/bootstrap\/(.*)\.js/,
+      'bower_components/jquery'
+    ],
+    vendor: []
+  },
 
   paths: {
-    // Which directories to watch
     watched: ["web/static", "test/static"],
-
-    // Where to compile files to
     public: "priv/static"
   }
 };

@@ -2,6 +2,8 @@
   "name": "gaze",
   "dependencies": {
     "classnames": "~2.1.1",
-    "reflux": "~0.2.7"
+    "reflux": "~0.2.7",
+    "bootstrap": "~3.3.4",
+    "react": "~0.13.3",
   }
 }

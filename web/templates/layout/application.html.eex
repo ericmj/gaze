@@ -8,13 +8,6 @@
     <meta name="author" content="">
 
     <title>Hello Gaze!</title>
-    <%= if Mix.env == :dev do %>
-      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.css">
-      <script src="//fb.me/react-0.13.2.js"></script>
-    <% else %>
-      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-      <script src="//fb.me/react-0.13.2.min.js"></script>
-    <% end %>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
