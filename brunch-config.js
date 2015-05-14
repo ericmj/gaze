@@ -19,11 +19,10 @@ exports.config = {
   },
 
   conventions: {
-    ignored: [
-      /^bower_components\/bootstrap\/(.*)\.js/,
-      'bower_components/jquery'
-    ],
-    vendor: []
+    vendor: [
+      /^bower_components\/bootstrap/,
+      /^bower_components\/jquery/
+    ]
   },
 
   paths: {

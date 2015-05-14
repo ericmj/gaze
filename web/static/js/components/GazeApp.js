@@ -14,16 +14,30 @@ export default React.createClass({
 
   render() {
     return <div>
-      {this.renderConnectionStatus()}
       {this.renderNav()}
       {this.renderContainer()}
     </div>;
   },
 
   renderNav() {
-    return <ul className="nav nav-tabs">
-      {this.renderTabs()}
-    </ul>;
+    return <div className="navbar navbar-default">
+      <div className="container">
+        <div className="navbar-header">
+          <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+            <span className="icon-bar"></span>
+            <span className="icon-bar"></span>
+            <span className="icon-bar"></span>
+          </button>
+          <a className="navbar-brand" href="/gaze">Gaze</a>
+        </div>
+
+        <div className="collapse navbar-collapse" id="navbar-collapse">
+          <ul className="nav navbar-nav">
+            {this.renderNavs()}
+          </ul>
+        </div>
+      </div>
+    </div>;
   },
 
   renderConnectionStatus() {
@@ -34,11 +48,11 @@ export default React.createClass({
     return <div><h4>{label}</h4></div>;
   },
 
-  renderTabs() {
-    return this.state.nav.map(tab => {
-      var classes = cx({active: tab.active});
-      return <li key={tab.id} id={tab.id} className={classes}>
-        <a onClick={this.onTabClick}>{tab.value}</a>
+  renderNavs() {
+    return this.state.nav.map(nav => {
+      var classes = cx({active: nav.active});
+      return <li key={nav.id} id={nav.id} className={classes}>
+        <a onClick={this.onTabClick}>{nav.value}</a>
       </li>;
     });
   },
