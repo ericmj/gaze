@@ -42,10 +42,10 @@ defmodule Gaze.SystemChannel do
   ]
 
   @info_all [
-    {@info_system,  &__MODULE__.system_info/1},
-    {@info_memory,  &__MODULE__.memory_info/1},
-    {@info_cpu,     &__MODULE__.cpu_info/1},
-    {@info_stats,   &__MODULE__.stats_info/1}
+    {@info_system,  :map, &__MODULE__.system_info/1},
+    {@info_memory,  :all, &__MODULE__.memory_info/1},
+    {@info_cpu,     :map, &__MODULE__.cpu_info/1},
+    {@info_stats,   :map, &__MODULE__.stats_info/1}
   ]
 
   def join("system", _msg, socket) do
@@ -64,8 +64,9 @@ defmodule Gaze.SystemChannel do
   end
 
   defp panels(info) do
-    Enum.map(info, fn {data, fun} ->
-      Enum.map(data, fun)
+    Enum.map(info, fn
+      {data, :map, fun} -> Enum.map(data, fun)
+      {data, :all, fun} -> fun.(data)
     end)
   end
 
@@ -129,9 +130,10 @@ defmodule Gaze.SystemChannel do
     |> to_string
   end
 
-  def memory_info(key) do
-    :erlang.memory(key)
-    |> human_size
+  def memory_info(keys) do
+    :erlang.memory(keys)
+    |> Keyword.values
+    |> Enum.map(&human_size/1)
   end
 
   def cpu_info(:schedulers_available) do
@@ -153,11 +155,11 @@ defmodule Gaze.SystemChannel do
     :erlang.statistics(:run_queue)
   end
   def stats_info(:io_input) do
-    {{_, input}, _} = :erlang.statistics(:io)
+    {{:input, input}, _} = :erlang.statistics(:io)
     human_size(input)
   end
   def stats_info(:io_output) do
-    {_, {_, output}} = :erlang.statistics(:io)
+    {_, {:output, output}} = :erlang.statistics(:io)
     human_size(output)
   end
   def stats_info(key) do

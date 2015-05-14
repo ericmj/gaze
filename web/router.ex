@@ -20,6 +20,7 @@ defmodule Gaze.Router do
 
   socket "/gaze/ws", Gaze, via: [Phoenix.Transports.WebSocket] do
     channel "system", SystemChannel
+    channel "charts", ChartsChannel
   end
 
   # Other scopes may use custom stacks.

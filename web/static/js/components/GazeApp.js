@@ -2,6 +2,7 @@ import React from "bower_components/react/react";
 import Reflux from "bower_components/reflux/dist/reflux";
 import cx from "bower_components/classnames";
 import System from "./System";
+import Charts from "./Charts";
 import Actions from "../actions";
 import ChannelStore from "../stores/ChannelStore";
 
@@ -62,7 +63,7 @@ export default React.createClass({
                   ? <this.state.activeComponent/>
                   : <div/>;
 
-    return <div className="container main">
+    return <div className="container">
       {component}
     </div>;
   },
@@ -71,7 +72,7 @@ export default React.createClass({
     return {
       nav: [
         {id: "nav_system",       value: "System",       component: System,  active: true},
-        {id: "nav_load_charts",  value: "Load charts",  component: null,    active: false},
+        {id: "nav_load_charts",  value: "Load charts",  component: Charts,  active: false},
         {id: "nav_applications", value: "Applications", component: null,    active: false}
       ],
       activeComponent: System
