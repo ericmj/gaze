@@ -17,6 +17,6 @@
     "bower_components"
   ],
   "scripts": {
-    "postinstall": "bower install && brunch build"
+    "postinstall": "bower install && brunch build --production"
   }
 }
