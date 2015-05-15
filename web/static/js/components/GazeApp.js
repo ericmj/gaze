@@ -3,15 +3,10 @@ import Reflux from "bower_components/reflux/dist/reflux";
 import cx from "bower_components/classnames";
 import System from "./System";
 import Charts from "./Charts";
-import Actions from "../actions";
-import ChannelStore from "../stores/ChannelStore";
+import SocketStore from "../stores/SocketStore";
 
 export default React.createClass({
-  mixins: [Reflux.connect(ChannelStore, "store")],
-
-  componentWillMount() {
-    Actions.connect();
-  },
+  mixins: [Reflux.connect(SocketStore, "socket")],
 
   render() {
     return <div>
@@ -42,7 +37,7 @@ export default React.createClass({
   },
 
   renderConnectionStatus() {
-    var label = this.state.store.connected
+    var label = this.state.socket.connected
               ? <span className="label label-success pull-right">Connected</span>
               : <span className="label label-danger pull-right">Disconnected</span>;
 

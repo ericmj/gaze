@@ -19,10 +19,7 @@ exports.config = {
   },
 
   conventions: {
-    vendor: [
-      /^bower_components\/bootstrap/,
-      /^bower_components\/jquery/
-    ]
+    vendor: []
   },
 
   paths: {

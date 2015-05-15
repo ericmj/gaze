@@ -1,20 +1,12 @@
 import {Socket} from "../../vendor/phoenix";
 import Reflux from "bower_components/reflux/dist/reflux";
-import Actions from "../actions";
+import Actions from "../Actions";
 
 export default Reflux.createStore({
   listenables: Actions,
 
   init() {
     this.connected = false;
-    this.channels = {};
-  },
-
-  getInitialState() {
-    return this;
-  },
-
-  onConnect() {
     this._socket = new Socket("/gaze/ws");
     this._socket.connect();
     this._socket.onOpen(this.onSocketOpen);
@@ -22,14 +14,15 @@ export default Reflux.createStore({
     this._socket.onError(this.onSocketClose);
   },
 
-  onJoin(channel) {
-    var chan = this._socket.chan(channel, {});
+  getInitialState() {
+    return this;
+  },
+
+  onJoin(channelName) {
+    var chan = this._socket.chan(channelName, {});
 
     chan.join().receive("ok", () => {
-      chan.on("update", data => {
-        this.channels[channel] = data;
-        this.trigger(this);
-      });
+      Actions.joined(channelName, chan);
     });
   },
 

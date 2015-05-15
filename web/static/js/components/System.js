@@ -1,7 +1,7 @@
 import React from "bower_components/react/react";
 import Reflux from "bower_components/reflux/dist/reflux";
-import ChannelStore from "../stores/ChannelStore";
-import Actions from "../actions";
+import SystemStore from "../stores/SystemStore";
+import Actions from "../Actions";
 
 const SYSTEM_HEADERS = [
   "System version",
@@ -43,16 +43,16 @@ const STATS_HEADERS = [
 
 
 export default React.createClass({
-  mixins: [Reflux.connect(ChannelStore, "store")],
+  mixins: [Reflux.connect(SystemStore, "system")],
 
   componentWillMount() {
     Actions.join("system");
   },
 
   render() {
-    var channel = this.state.store.channels.system;
-    if (!channel) return <div/>;
-    var panels = channel.panels;
+    var system = this.state.system;
+    if (!system) return <div/>;
+    var panels = system.panels;
 
     return <div>
       <div className="row">
@@ -64,7 +64,7 @@ export default React.createClass({
         {this.renderPanel("Statistics", STATS_HEADERS, panels[3])}
       </div>
       <div className="row">
-        {this.renderAlloc(channel.alloc)}
+        {this.renderAlloc(system.alloc)}
       </div>
     </div>;
   },

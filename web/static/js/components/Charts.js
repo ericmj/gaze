@@ -1,19 +1,17 @@
 import React from "bower_components/react/react";
 import Reflux from "bower_components/reflux/dist/reflux";
-import ChannelStore from "../stores/ChannelStore";
-import Actions from "../actions";
+import ChartsStore from "../stores/ChartsStore";
+import Actions from "../Actions";
 
 
 export default React.createClass({
-  mixins: [Reflux.connect(ChannelStore, "store")],
+  mixins: [Reflux.listenTo(ChartsStore, "channelUpdate")],
 
   componentWillMount() {
     Actions.join("charts");
   },
 
   render() {
-    var channel = this.state.store.channels.charts;
-    if (!channel) return <div/>;
 
     return <div/>;
   }
