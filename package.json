@@ -2,6 +2,7 @@
   "repository": {},
   "dependencies": {
     "babel-brunch": "^4.0.0",
+    "bower": "^1.4.1",
     "brunch": "^1.8.1",
     "clean-css-brunch": ">= 1.0 < 1.8",
     "css-brunch": ">= 1.0 < 1.8",
@@ -10,5 +11,12 @@
     "react-tools": "^0.13.2",
     "sass-brunch": "^1.8.10",
     "uglify-js-brunch": ">= 1.0 < 1.8"
+  },
+  "cacheDirectories": [
+    "node_modules",
+    "bower_components"
+  ],
+  "scripts": {
+    "postinstall": "bower install && brunch build"
   }
 }

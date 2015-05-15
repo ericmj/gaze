@@ -4,6 +4,7 @@ defmodule Gaze.Mixfile do
   def project do
     [app: :gaze,
      version: "0.0.1",
+     aliases: aliases,
      elixir: "~> 1.0",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
@@ -33,4 +34,19 @@ defmodule Gaze.Mixfile do
      {:phoenix_html, "~> 1.0"},
      {:cowboy, "~> 1.0"}]
   end
+
+  defp aliases do
+    if heroku? do
+      [compile: ["compile", &assets/1]]
+    else
+      []
+    end
+  end
+
+  defp assets(args) do
+    Mix.Task.run "phoenix.digest", args
+    Mix.Project.build_structure
+  end
+
+  defp heroku?, do: !! System.get_env("DYNO")
 end
