@@ -9,3 +9,15 @@
 .nav li a {
   cursor: pointer;
 }
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+svg {
+  width: 500px;
+  height: 300px;
+  border: 1px solid black;
+}
