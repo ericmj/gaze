@@ -12,9 +12,13 @@ export default channelName => {
     onJoined(joinedChannelName, chan) {
       if (channelName == joinedChannelName) {
         chan.on("update", data => {
-          this.trigger(data);
+          this.onUpdate(data);
         });
       }
+    },
+
+    onUpdate(data) {
+      this.trigger(data);
     }
   }
 };
