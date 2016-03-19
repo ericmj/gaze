@@ -37,13 +37,13 @@ defmodule Gaze.ChartsChannel do
       :erlang.statistics(:scheduler_wall_time)
       |> Enum.sort
 
-    if old_wall_time = socket.assigns[:wall_time] do
-      wall_diff =
+    wall_diff =
+      if old_wall_time = socket.assigns[:wall_time] do
         Enum.zip(old_wall_time, new_wall_time)
         |> Enum.map(fn {{_, a0, t0}, {_, a1, t1}} -> (a1-a0) / (t1-t0) end)
-    else
-      wall_diff = Enum.map(new_wall_time, fn _ -> 0.0 end)
-    end
+      else
+        Enum.map(new_wall_time, fn _ -> 0.0 end)
+      end
 
     socket = assign(socket, :wall_time, new_wall_time)
     {wall_diff, socket}
@@ -59,13 +59,13 @@ defmodule Gaze.ChartsChannel do
     {{:input, input}, {:output, output}} = :erlang.statistics(:io)
     new_io = [input, output]
 
-    if old_io = socket.assigns[:io] do
-      io_diff =
+    io_diff =
+      if old_io = socket.assigns[:io] do
         Enum.zip(old_io, new_io)
         |> Enum.map(fn {old, new} -> div(new-old, 1024) end)
-    else
-      io_diff = [0, 0]
-    end
+      else
+        [0, 0]
+      end
 
     socket = assign(socket, :io, new_io)
     {io_diff, socket}
