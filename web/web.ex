@@ -26,7 +26,6 @@ defmodule Gaze.Web do
     quote do
       use Phoenix.Controller
 
-      # Import URL helpers from the router
       import Gaze.Router.Helpers
     end
   end
@@ -36,13 +35,13 @@ defmodule Gaze.Web do
       use Phoenix.View, root: "web/templates"
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
-
-      # Import URL helpers from the router
-      import Gaze.Router.Helpers
+      import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1]
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
+
+      import Gaze.Router.Helpers
+      import Gaze.ErrorHelpers
     end
   end
 
@@ -55,7 +54,6 @@ defmodule Gaze.Web do
   def channel do
     quote do
       use Phoenix.Channel
-
     end
   end
 

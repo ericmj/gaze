@@ -153,6 +153,7 @@ defmodule Gaze.SystemChannel do
   end
   def stats_info(:run_queue) do
     :erlang.statistics(:run_queue)
+    |> Integer.to_string
   end
   def stats_info(:io_input) do
     {{:input, input}, _} = :erlang.statistics(:io)
