@@ -6,6 +6,8 @@ import Effects exposing (Effects)
 import Dict exposing (Dict)
 import Json.Encode
 import Json.Decode exposing (..)
+import Dict
+import Gaze.Widget as Widget
 import Gaze.Util as Util
 import Gaze.Socket as Socket
 
@@ -32,6 +34,10 @@ navigate model =
   else
     ({model | joined = True}, Socket.joinChannel "system")
 
+tick : Model -> (Model, Effects ())
+tick model =
+  (model, Effects.none)
+
 event : Model -> String -> Json.Encode.Value -> Model
 event model event payload =
   case event of
@@ -53,8 +59,8 @@ decode value =
        _ ->
          Debug.crash "decode system"
 
-view : Model -> Html
-view model =
+view : Dict.Dict String (Int, Int) -> Model -> Html
+view elems model =
   let panels' = model.panels |> Util.zip panels |> Util.chunk2
   in div [] (List.map viewPanelRow panels' ++ [div [class "row"] [viewAlloc model.alloc]])
 
@@ -67,34 +73,27 @@ viewPanel ((title, headings), model) =
   let rows = Util.zip headings model
       map (header, data) = [dt [] [text header], dd [] [text data]]
       dls = List.map map rows |> List.concat
-  in div [class "col-md-6"]
-       [ div [class "panel panel-default"]
-           [ div [class "panel-heading"] [text title]
-           , div [class "panel-body"] [dl [class "dl-horizontal"] dls]
-           ]
-       ]
+  in div [class "col-md-6"] [Widget.panel (text title) (dl [class "dl-horizontal"] dls)]
 
 viewAlloc : Alloc -> Html
 viewAlloc rows =
   let rower (type', block, carrier) =
         tr [] [th [] [text type'], td [] [text block], td [] [text carrier]]
   in div [class "col-md-12"]
-       [ div [class "panel panel-default"]
-           [ div [class "panel-heading"] [text "Allocators"]
-           , div [class "panel-body"]
-               [ table [class "table table-striped"]
-                   [ thead []
-                       [ tr []
-                           [ th [] [text "Type"]
-                           , th [] [text "Block size"]
-                           , th [] [text "Carrier size"]
-                           ]
-                       ]
-                   , tbody [] (List.map rower rows)
-                   ]
-               ]
-           ]
+       [ Widget.panel (text "Allocators") (
+           table [class "table table-striped"]
+             [ thead [] [tr [] viewAllocHeaders]
+             , tbody [] (List.map rower rows)
+             ]
+         )
        ]
+
+viewAllocHeaders : List Html
+viewAllocHeaders =
+  [ th [] [text "Type"]
+  , th [] [text "Block size"]
+  , th [] [text "Carrier size"]
+  ]
 
 panels =
   [ ("System and architecture", system_headers)

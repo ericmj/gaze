@@ -6,23 +6,28 @@ import Html.Events exposing (..)
 import StartApp
 import Effects exposing (Effects)
 import Task
+import Dict
 import Json.Encode
+import Gaze.Widget as Widget
 import Gaze.Socket as Socket
 import Gaze.System as System
 import Gaze.Charts as Charts
 
 type alias Model =
-  { nav : List ComponentId,
-    activeId : ComponentId,
-    system : System.Model,
-    charts : Charts.Model
+  { nav : List ComponentId
+  , activeId : ComponentId
+  , system : System.Model
+  , charts : Charts.Model
+  , elemDimensions : Dict.Dict String (Int, Int)
   }
 
 type Action
   = Noop
   | Init
+  | Tick
   | Navigate ComponentId
   | Event String String Json.Encode.Value
+  | ElemDims (List (String, (Int, Int)))
 
 type ComponentId
   = System
@@ -33,6 +38,7 @@ port tasks =
   app.tasks
 
 port appInit : Signal ()
+port tick : Signal ()
 
 port joinChannel : Signal String
 port joinChannel =
@@ -44,9 +50,15 @@ port channelPush =
 
 port channelEvent : Signal (String, String, Json.Encode.Value)
 
-signal : Signal.Mailbox a -> Signal a
-signal mailbox =
-  mailbox.signal
+port elemDimensions : Signal (List (String, (Int, Int)))
+
+port registerElemDimensions : Signal String
+port registerElemDimensions =
+  Widget.elemDimensionsBox |> .signal
+
+port doTick : Signal ()
+port doTick =
+  Widget.doTickBox |> .signal
 
 main : Signal Html
 main = app.html
@@ -69,30 +81,46 @@ model =
   , activeId = System
   , system = System.model
   , charts = Charts.model
+  , elemDimensions = Dict.empty
   }
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     Navigate id ->
-      let (model, effects) = navigate {model | activeId = id}
+      let (model, effects) = callNavigate {model | activeId = id}
       in (model, Effects.map (always Noop) effects)
     Init ->
       update (Navigate System) model
     Event channel event payload ->
       let model = doEvent model channel event payload
       in (model, Effects.none)
+    ElemDims dict ->
+      ({model | elemDimensions = Dict.fromList (Debug.log "dims" dict)}, Effects.none)
+    Tick ->
+      let (model, effects) = callTick model
+      in (model, Effects.map (always Noop) effects)
     Noop ->
       (model, Effects.none)
 
-navigate : Model -> (Model, Effects ())
-navigate model =
+callNavigate : Model -> (Model, Effects ())
+callNavigate model =
   case model.activeId of
     System ->
       let (compModel, effects) = System.navigate model.system
       in ({model | system = compModel}, effects)
     Charts ->
       let (compModel, effects) = Charts.navigate model.charts
+      in ({model | charts = compModel}, effects)
+
+callTick : Model -> (Model, Effects ())
+callTick model =
+  case model.activeId of
+    System ->
+      let (compModel, effects) = System.tick model.system
+      in ({model | system = compModel}, effects)
+    Charts ->
+      let (compModel, effects) = Charts.tick model.charts
       in ({model | charts = compModel}, effects)
 
 doEvent : Model -> String -> String -> Json.Encode.Value -> Model
@@ -115,7 +143,9 @@ view address model =
 inputs : List (Signal Action)
 inputs =
   [ Signal.map (always Init) appInit
-  , Signal.map (uncurry3 Event) channelEvent]
+  , Signal.map (always Tick) tick
+  , Signal.map (uncurry3 Event) channelEvent
+  , Signal.map ElemDims elemDimensions]
 
 viewNav : Signal.Address Action -> Model -> Html
 viewNav address model =
@@ -145,9 +175,9 @@ viewContainer : Signal.Address Action -> Model -> Html
 viewContainer address model =
   case model.activeId of
     System ->
-      System.view model.system
+      System.view model.elemDimensions model.system
     Charts ->
-      Charts.view model.charts
+      Charts.view model.elemDimensions model.charts
 
 uncurry3 : (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 fun (a, b, c) =
