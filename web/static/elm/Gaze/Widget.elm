@@ -1,18 +1,21 @@
 module Gaze.Widget where
 
 import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html.Attributes as Attr
+import Svg exposing (..)
+import Svg.Attributes as SvgAttr
 import String
 import Effects exposing (Effects)
 import Task
+import Gaze.Util as Util
 
-elemDimensionsBox : Signal.Mailbox String
+elemDimensionsBox : Signal.Mailbox (List String)
 elemDimensionsBox =
-  Signal.mailbox ""
+  Signal.mailbox []
 
-registerForElemDims : String -> Effects ()
-registerForElemDims id =
-  Signal.send elemDimensionsBox.address id
+registerForElemDims : List String -> Effects ()
+registerForElemDims ids =
+  Signal.send elemDimensionsBox.address ids
     |> Effects.task
 
 doTickBox : Signal.Mailbox ()
@@ -26,10 +29,43 @@ doTick =
 
 panel : Html -> Html -> Html
 panel heading body =
-  div [class "panel panel-default"]
-    [ div [class "panel-heading"] [heading]
-    , div [class "panel-body"] [body]
+  div [Attr.class "panel panel-default"]
+    [ div [Attr.class "panel-heading"] [heading]
+    , div [Attr.class "panel-body"] [body]
     ]
+
+autoScaleChart : List Html.Attribute -> (Float, Float) -> Float -> List (List Float) -> Html
+autoScaleChart attrs size scaleX values =
+  let scaleY = values |> List.concat |> List.foldl Basics.max 1
+      scaleY' = scaleY / 10 |> ceiling |> ((*) 10) |> toFloat
+      values' = List.map (List.map ((-) scaleY')) values
+  in chart attrs size (scaleX, scaleY') values'
+
+chart : List Html.Attribute -> (Float, Float) -> (Float, Float) -> List (List Float) -> Html
+chart attrs size scale values =
+  Svg.svg attrs (chartPaths size scale values)
+
+chartPaths : (Float, Float) -> (Float, Float) -> List (List Float) -> List Svg
+chartPaths size scale values =
+  let colors = genColors (List.length values)
+  in List.map (chartPath size scale) (Util.zip values colors)
+
+chartPath : (Float, Float) -> (Float, Float) -> (List Float, String) -> Svg
+chartPath size (scaleX, scaleY) (values, color) =
+  let values' = Util.zip (List.reverse [0..scaleX]) values
+                  |> List.map (scalePoint (scaleX, scaleY) size)
+  in case values' of
+       [] ->
+         Svg.path [] []
+       (fX, fY) :: rest ->
+         let first = "M " ++ toString fX ++ " " ++ toString fY
+             rest' = List.map (\(x, y) -> "L " ++ toString x ++ " " ++ toString y) rest
+             values'' = first ++ " " ++ String.join " " rest'
+         in Svg.path [SvgAttr.d values'', Attr.class "line", SvgAttr.stroke color] []
+
+scalePoint : (Float, Float) -> (Float, Float) -> (Float, Float) -> (Float, Float)
+scalePoint (vX, vY) (sX, sY) (pX, pY) =
+  (sX / vX * pX, sY / vY * pY)
 
 genColors : Int -> List String
 genColors num =

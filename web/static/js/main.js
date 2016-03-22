@@ -37,8 +37,8 @@ app.ports.channelPush.subscribe((name, event, payload) => {
   channel.push(event, payload)
 })
 
-app.ports.registerElemDimensions.subscribe(id => {
-  elemDimensions.push(id)
+app.ports.registerElemDimensions.subscribe(ids => {
+  Array.prototype.push.apply(elemDimensions, ids);
   onresize()
 })
 

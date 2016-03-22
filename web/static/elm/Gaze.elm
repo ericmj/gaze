@@ -52,7 +52,7 @@ port channelEvent : Signal (String, String, Json.Encode.Value)
 
 port elemDimensions : Signal (List (String, (Int, Int)))
 
-port registerElemDimensions : Signal String
+port registerElemDimensions : Signal (List String)
 port registerElemDimensions =
   Widget.elemDimensionsBox |> .signal
 
@@ -96,7 +96,7 @@ update action model =
       let model = doEvent model channel event payload
       in (model, Effects.none)
     ElemDims dict ->
-      ({model | elemDimensions = Dict.fromList (Debug.log "dims" dict)}, Effects.none)
+      ({model | elemDimensions = Dict.fromList dict}, Effects.none)
     Tick ->
       let (model, effects) = callTick model
       in (model, Effects.map (always Noop) effects)

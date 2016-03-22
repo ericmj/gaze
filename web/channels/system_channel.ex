@@ -4,7 +4,7 @@ defmodule Gaze.SystemChannel do
   @update_timer 1000
 
   # TODO: Do the clever way of finding a more specific OTP version
-  
+
   @info_system [
     :otp_release,
     :version,

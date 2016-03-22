@@ -1,9 +1,7 @@
 module Gaze.Charts where
 
 import Html exposing (..)
-import Html.Attributes
-import Svg exposing (..)
-import Svg.Attributes exposing (..)
+import Html.Attributes exposing (.. )
 import Effects exposing (Effects)
 import Json.Encode
 import Json.Decode exposing (..)
@@ -16,12 +14,16 @@ import Gaze.Socket as Socket
 type alias Model =
   { joined : Bool
   , schedulers : List (List Float)
+  , memory : List (List Float)
+  , io : List (List Float)
   }
 
 model : Model
 model =
   { joined = False
   , schedulers = []
+  , memory = []
+  , io = []
   }
 
 navigate : Model -> (Model, Effects ())
@@ -38,22 +40,32 @@ navigate model =
 
 tick : Model -> (Model, Effects ())
 tick model =
-  (model, Widget.registerForElemDims "schedulers")
-  |> Debug.log "tick"
+  (model, Widget.registerForElemDims ["schedulers", "memory", "io"])
 
 event : Model -> String -> Json.Encode.Value -> Model
 event model event payload =
   case event of
     "update" ->
-      let schedulers = Util.zipDefault [] (decode payload) model.schedulers
-                        |> List.map ((List.take 101) << uncurry (::))
-      in {model | schedulers = schedulers}
+      let (schedulers, memory, io) = decode payload
+          schedulers' = List.map ((-) 1) schedulers
+      in {model | schedulers = track schedulers' model.schedulers
+                , memory = track memory model.memory
+                , io = track io model.io
+                }
     _ ->
       model
 
-decode : Json.Encode.Value -> (List Float)
+track : List Float -> List (List Float) -> List (List Float)
+track payload existing =
+  Util.zipDefault [] payload existing
+    |> List.map ((List.take 101) << uncurry (::))
+
+decode : Json.Encode.Value -> (List Float, List Float, List Float)
 decode value =
-  let decoder = "schedulers" := Json.Decode.list float
+  let schedulers = "schedulers" := Json.Decode.list float
+      memory = "memory" := Json.Decode.list float
+      io = "io" := Json.Decode.list float
+      decoder = object3 (,,) schedulers memory io
       result = decodeValue decoder value
   in case result of
      Ok value ->
@@ -63,41 +75,33 @@ decode value =
 
 view : Dict.Dict String (Int, Int) -> Model -> Html
 view elems model =
-  let size = case Dict.get "schedulers" elems of
-               Just size ->
-                 size
-               _ ->
-                 (100, 100)
-  in div [class "row"]
-       [ div [class "col-md-12"]
-           [ Widget.panel (Html.text "Schedulers") (viewSchedulersSvg size model) ]
+  let schedulerSize = Dict.get "schedulers" elems |> Maybe.withDefault (100, 100)
+      memorySize = Dict.get "memory" elems |> Maybe.withDefault (100, 100)
+      ioSize = Dict.get "io" elems |> Maybe.withDefault (100, 100)
+  in div []
+       [ div [class "row"]
+           [ div [class "col-md-12"]
+              [ Widget.panel (Html.text "Schedulers") (viewSchedulersSvg schedulerSize model) ]
+           ]
+       , div [class "row"]
+           [ div [class "col-md-6"]
+              [ Widget.panel (Html.text "Memory usage (MB)") (viewMemorySvg memorySize model) ]
+           , div [class "col-md-6"]
+              [ Widget.panel (Html.text "IO usage (kB)") (viewIOSvg ioSize model) ]
+           ]
        ]
 
 viewSchedulersSvg : (Int, Int) -> Model -> Html
 viewSchedulersSvg (x, y) model =
   let size = (toFloat x, toFloat y)
-  in div [class "col-md-6"]
-       [ Svg.svg [id "schedulers"] (viewSchedulers size model.schedulers) ]
+  in div [] [Widget.chart [id "schedulers"] size (100, 1) model.schedulers]
 
-viewSchedulers : (Float, Float) -> List (List Float) -> List Svg
-viewSchedulers size schedulers =
-  let colors = Widget.genColors (List.length schedulers)
-  in List.map (viewScheduler size) (Util.zip schedulers colors)
+viewMemorySvg : (Int, Int) -> Model -> Html
+viewMemorySvg (x, y) model =
+  let size = (toFloat x, toFloat y)
+  in div [] [Widget.autoScaleChart [id "memory"] size 100 model.memory]
 
-viewScheduler : (Float, Float) -> (List Float, String) -> Svg
-viewScheduler size (values, color) =
-  let values' = Util.zip (List.reverse [0..100]) values
-                 |> List.map (\(x, y) -> (x, 1-y))
-                 |> List.map (scalePoint (100, 1) size)
-  in case values' of
-    [] ->
-      Svg.path [] []
-    (fX, fY) :: rest ->
-      let first = "M " ++ toString fX ++ " " ++ toString fY
-          rest' = List.map (\(x, y) -> "L " ++ toString x ++ " " ++ toString y) rest
-          values'' = first ++ " " ++ String.join " " rest'
-      in Svg.path [d values'', class "line", stroke color] []
-
-scalePoint : (Float, Float) -> (Float, Float) -> (Float, Float) -> (Float, Float)
-scalePoint (vX, vY) (sX, sY) (pX, pY) =
-  (sX / vX * pX, sY / vY * pY)
+viewIOSvg : (Int, Int) -> Model -> Html
+viewIOSvg (x, y) model =
+  let size = (toFloat x, toFloat y)
+  in div [] [Widget.autoScaleChart [id "io"] size 100 model.io]
