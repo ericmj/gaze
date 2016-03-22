@@ -8,7 +8,7 @@ defmodule Gaze.Endpoint do
   # You should set gzip to true if you are running phoenix.digest
   # when deploying your static files in production.
   plug Plug.Static,
-    at: "/", from: :gaze,
+    at: "/gaze", from: :gaze,
     only: ~w(css fonts js)
 
   # Code reloading can be explicitly enabled under the
