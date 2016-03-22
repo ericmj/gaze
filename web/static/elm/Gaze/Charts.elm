@@ -1,25 +1,29 @@
 module Gaze.Charts where
 
 import Html exposing (..)
--- import Html.Attributes exposing (..)
-import Svg exposing (..)
-import Svg.Attributes exposing (..)
+import Html.Attributes exposing (.. )
 import Effects exposing (Effects)
 import Json.Encode
 import Json.Decode exposing (..)
 import String
+import Dict
+import Gaze.Widget as Widget
 import Gaze.Util as Util
 import Gaze.Socket as Socket
 
 type alias Model =
   { joined : Bool
   , schedulers : List (List Float)
+  , memory : List (List Float)
+  , io : List (List Float)
   }
 
 model : Model
 model =
   { joined = False
   , schedulers = []
+  , memory = []
+  , io = []
   }
 
 navigate : Model -> (Model, Effects ())
@@ -27,21 +31,41 @@ navigate model =
   if model.joined then
     (model, Effects.none)
   else
-    ({model | joined = True}, Socket.joinChannel "charts")
+    ( {model | joined = True}
+    , Effects.batch
+        [ Socket.joinChannel "charts"
+        , Widget.doTick
+        ]
+    )
+
+tick : Model -> (Model, Effects ())
+tick model =
+  (model, Widget.registerForElemDims ["schedulers", "memory", "io"])
 
 event : Model -> String -> Json.Encode.Value -> Model
 event model event payload =
   case event of
     "update" ->
-      let schedulers = Util.zipDefault [] (decode payload) model.schedulers
-                        |> List.map ((List.take 101) << uncurry (::))
-      in {model | schedulers = schedulers}
+      let (schedulers, memory, io) = decode payload
+          schedulers' = List.map ((-) 1) schedulers
+      in {model | schedulers = track schedulers' model.schedulers
+                , memory = track memory model.memory
+                , io = track io model.io
+                }
     _ ->
       model
 
-decode : Json.Encode.Value -> (List Float)
+track : List Float -> List (List Float) -> List (List Float)
+track payload existing =
+  Util.zipDefault [] payload existing
+    |> List.map ((List.take 101) << uncurry (::))
+
+decode : Json.Encode.Value -> (List Float, List Float, List Float)
 decode value =
-  let decoder = "schedulers" := Json.Decode.list float
+  let schedulers = "schedulers" := Json.Decode.list float
+      memory = "memory" := Json.Decode.list float
+      io = "io" := Json.Decode.list float
+      decoder = object3 (,,) schedulers memory io
       result = decodeValue decoder value
   in case result of
      Ok value ->
@@ -49,89 +73,35 @@ decode value =
      _ ->
        Debug.crash "decode chars"
 
-view : Model -> Html
-view model =
-  div [class "row"]
-    [ div [class "col-md-12"]
-        [ div [class "panel panel-default"]
-            [ div [class "panel-heading"] [Html.text "Schedulers"]
-            , div [class "panel-body"]
-                [ Svg.svg [class "schedulers", viewBox "0 0 100 100", preserveAspectRatio "none"]
-                          (viewSchedulers model.schedulers) ]
-            ]
-        ]
-    ]
+view : Dict.Dict String (Int, Int) -> Model -> Html
+view elems model =
+  let schedulerSize = Dict.get "schedulers" elems |> Maybe.withDefault (100, 100)
+      memorySize = Dict.get "memory" elems |> Maybe.withDefault (100, 100)
+      ioSize = Dict.get "io" elems |> Maybe.withDefault (100, 100)
+  in div []
+       [ div [class "row"]
+           [ div [class "col-md-12"]
+              [ Widget.panel (Html.text "Schedulers") (viewSchedulersSvg schedulerSize model) ]
+           ]
+       , div [class "row"]
+           [ div [class "col-md-6"]
+              [ Widget.panel (Html.text "Memory usage (MB)") (viewMemorySvg memorySize model) ]
+           , div [class "col-md-6"]
+              [ Widget.panel (Html.text "IO usage (kB)") (viewIOSvg ioSize model) ]
+           ]
+       ]
 
-viewSchedulers : List (List Float) -> List Svg
-viewSchedulers schedulers =
-  let colors = genColors (List.length schedulers)
-  in List.map viewScheduler (Util.zip schedulers colors)
+viewSchedulersSvg : (Int, Int) -> Model -> Html
+viewSchedulersSvg (x, y) model =
+  let size = (toFloat x, toFloat y)
+  in div [] [Widget.chart [id "schedulers"] size (100, 1) model.schedulers]
 
-viewScheduler : (List Float, String) -> Svg
-viewScheduler (values, color) =
-  case values of
-    [] ->
-      Svg.path [] []
-    first :: rest ->
-      let values' = Util.zip (List.reverse [0..99]) rest
-                     |> List.map (\(x, y) -> "L " ++ toString x ++ " " ++ toString (100 - y*100))
-          first' = "M 100 " ++ toString (100 - first*100)
-          values'' = first' ++ " " ++ String.join " " values'
-      in Svg.path [d values'', class "line", stroke color] []
+viewMemorySvg : (Int, Int) -> Model -> Html
+viewMemorySvg (x, y) model =
+  let size = (toFloat x, toFloat y)
+  in div [] [Widget.autoScaleChart [id "memory"] size 100 model.memory]
 
-genColors : Int -> List String
-genColors num =
-  [1..num]
-    |> List.map (\i -> hsvToRgb (1 / toFloat num * toFloat i, 1, 1))
-    |> List.map colorToString
-
-hsvToRgb : (Float, Float, Float) -> (Int, Int, Int)
-hsvToRgb (h, s, v) =
-  let i = floor (h * 6)
-      f = h * 6 - (toFloat i)
-      p = v * (1 - s)
-      q = v * (1 - f * s)
-      t = v * (1 - (1 - f) * s)
-      (r, g, b) = case i % 6 of
-                    0 -> (v, t, p)
-                    1 -> (q, v, p)
-                    2 -> (p, v, t)
-                    3 -> (p, q, v)
-                    4 -> (t, p, v)
-                    5 -> (v, p, q)
-                    _ -> Debug.crash "make elm happy"
-  in (floor (r*255), floor (g*255), floor (b*255))
-
-colorToString : (Int, Int, Int) -> String
-colorToString (a, b, c) =
-  "#" ++ String.join "" (List.map numToHexString [a, b, c])
-
-numToHexString : Int -> String
-numToHexString num =
-  if num == 0 then
-    "00"
-  else if num < 16 then
-    "0" ++ toHexs num
-  else
-    toHexs num
-
-toHexs: Int -> String
-toHexs num =
-  if num // 16 == 0 then
-    toHex num
-  else
-    toHexs (num // 16) ++ toHex (num % 16)
-
-toHex : Int -> String
-toHex num =
-  if num < 10 then
-    toString num
-  else
-    case num of
-      10 -> "A"
-      11 -> "B"
-      12 -> "C"
-      13 -> "D"
-      14 -> "E"
-      15 -> "F"
-      _ -> Debug.crash "invalid toHex"
+viewIOSvg : (Int, Int) -> Model -> Html
+viewIOSvg (x, y) model =
+  let size = (toFloat x, toFloat y)
+  in div [] [Widget.autoScaleChart [id "io"] size 100 model.io]

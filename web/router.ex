@@ -13,10 +13,10 @@ defmodule Gaze.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", Gaze do
+  scope "/gaze", Gaze do
     pipe_through :browser # Use the default browser stack
 
-    get "/gaze", GazeController, :index
+    get "/", GazeController, :index
   end
 
   # Other scopes may use custom stacks.

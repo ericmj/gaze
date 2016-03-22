@@ -52,7 +52,7 @@ defmodule Gaze.ChartsChannel do
   defp memory do
     :erlang.memory(@info_memory)
     |> Keyword.values
-    |> Enum.map(&div(&1, 1024 * 1024))
+    |> Enum.map(&(&1 / (1024 * 1024)))
   end
 
   defp io(socket) do
@@ -62,7 +62,7 @@ defmodule Gaze.ChartsChannel do
     io_diff =
       if old_io = socket.assigns[:io] do
         Enum.zip(old_io, new_io)
-        |> Enum.map(fn {old, new} -> div(new-old, 1024) end)
+        |> Enum.map(fn {old, new} -> (new-old) / 1024 end)
       else
         [0, 0]
       end
