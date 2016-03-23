@@ -73,19 +73,19 @@ viewPanel ((title, headings), model) =
   let rows = Util.zip headings model
       map (header, data) = [dt [] [text header], dd [] [text data]]
       dls = List.map map rows |> List.concat
-  in div [class "col-md-6"] [Widget.panel (text title) (dl [class "dl-horizontal"] dls)]
+  in div [class "col-md-6"] [Widget.panel title [dl [class "dl-horizontal"] dls]]
 
 viewAlloc : Alloc -> Html
 viewAlloc rows =
   let rower (type', block, carrier) =
         tr [] [th [] [text type'], td [] [text block], td [] [text carrier]]
   in div [class "col-md-12"]
-       [ Widget.panel (text "Allocators") (
-           table [class "table table-striped"]
-             [ thead [] [tr [] viewAllocHeaders]
-             , tbody [] (List.map rower rows)
-             ]
-         )
+       [ Widget.panel "Allocators"
+           [ table [class "table table-striped"]
+               [ thead [] [tr [] viewAllocHeaders]
+               , tbody [] (List.map rower rows)
+               ]
+           ]
        ]
 
 viewAllocHeaders : List Html
