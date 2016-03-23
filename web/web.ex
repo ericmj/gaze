@@ -54,6 +54,7 @@ defmodule Gaze.Web do
   def channel do
     quote do
       use Phoenix.Channel
+      alias Gaze.Util
     end
   end
 

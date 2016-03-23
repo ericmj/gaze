@@ -10,7 +10,7 @@ type Action
 type Id
   = System
   | Charts
-  -- | Alloc
+  | Alloc
 
 stringToId : String -> Id
 stringToId string =
@@ -19,5 +19,7 @@ stringToId string =
       System
     "charts" ->
       Charts
+    "alloc" ->
+      Alloc
     _ ->
       Debug.crash "stringToId"

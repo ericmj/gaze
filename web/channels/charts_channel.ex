@@ -1,5 +1,5 @@
 defmodule Gaze.ChartsChannel do
-  use Phoenix.Channel
+  use Gaze.Web, :channel
 
   @update_timer 1000
 

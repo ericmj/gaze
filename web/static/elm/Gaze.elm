@@ -13,12 +13,14 @@ import Gaze.Widget as Widget
 import Gaze.Socket as Socket
 import Gaze.System as System
 import Gaze.Charts as Charts
+import Gaze.Alloc as Alloc
 
 type alias Model =
   { nav : List Component.Id
   , activeId : Component.Id
   , system : System.Model
   , charts : Charts.Model
+  , alloc : Alloc.Model
   , elemDimensions : Dict.Dict String (Int, Int)
   }
 
@@ -74,10 +76,11 @@ init = (model, Effects.none)
 
 model : Model
 model =
-  { nav = [Component.System, Component.Charts]
+  { nav = [Component.System, Component.Charts, Component.Alloc]
   , activeId = Component.System
   , system = System.model
   , charts = Charts.model
+  , alloc = Alloc.model
   , elemDimensions = Dict.empty
   }
 
@@ -109,6 +112,9 @@ callComponent action id model =
       Component.Charts ->
         let (compModel, effects) = Charts.update action model.charts
         in ({model | charts = compModel}, effects)
+      Component.Alloc ->
+        let (compModel, effects) = Alloc.update action model.alloc
+        in ({model | alloc = compModel}, effects)
   in (model, Effects.map (always Noop) effects)
 
 view : Signal.Address Action -> Model -> Html
@@ -156,6 +162,8 @@ viewComponent address model =
       System.view model.elemDimensions model.system
     Component.Charts ->
       Charts.view model.elemDimensions model.charts
+    Component.Alloc ->
+      Alloc.view model.elemDimensions model.alloc
 
 uncurry3 : (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 fun (a, b, c) =

@@ -4,6 +4,7 @@ defmodule Gaze.UserSocket do
   ## Channels
   channel "system", Gaze.SystemChannel
   channel "charts", Gaze.ChartsChannel
+  channel "alloc", Gaze.AllocChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
