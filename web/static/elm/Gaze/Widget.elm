@@ -27,11 +27,11 @@ doTick =
   Signal.send doTickBox.address ()
     |> Effects.task
 
-panel : Html -> Html -> Html
+panel : String -> List Html -> Html
 panel heading body =
   div [Attr.class "panel panel-default"]
-    [ div [Attr.class "panel-heading"] [heading]
-    , div [Attr.class "panel-body"] [body]
+    [ div [Attr.class "panel-heading"] [Html.text heading]
+    , div [Attr.class "panel-body"] body
     ]
 
 autoScaleChart : List Html.Attribute -> (Float, Float) -> Float -> List (List Float) -> Html
@@ -42,8 +42,42 @@ autoScaleChart attrs size scaleX values =
   in chart attrs size (scaleX, scaleY') values'
 
 chart : List Html.Attribute -> (Float, Float) -> (Float, Float) -> List (List Float) -> Html
-chart attrs size scale values =
-  Svg.svg attrs (chartPaths size scale values)
+chart attrs (width, height) scale values =
+  let size = (width-30, height-10)
+      elems = (chartPaths size scale values ++ chartLines size scale)
+  in Svg.svg attrs [Svg.g [SvgAttr.transform "translate(0, 10)"] elems]
+
+chartLines : (Float, Float) -> (Float, Float) -> List Svg
+chartLines size scale =
+  let guidelines = List.map (chartGuideLine size scale) [0..4]
+      border = chartLine size 5
+  in (List.concat guidelines)
+      ++ [Svg.path [SvgAttr.d border, SvgAttr.class "border"] []]
+
+chartGuideLine : (Float, Float) -> (Float, Float) -> Float -> List Svg
+chartGuideLine (width, height) (scaleX, scaleY) x =
+  let step = 0.2 * x * height
+      scaleStep = scaleY - 0.2 * x * scaleY |> roundScale scaleY
+      d1 = "M 0 " ++ toString step ++ " L " ++ toString width ++ " " ++ toString step
+      d2 = "M " ++ toString (width-5) ++ " " ++ toString step ++ " L " ++ toString (width+5) ++ " " ++ toString step
+  in [ Svg.path [SvgAttr.d d1, SvgAttr.class "guideline"] []
+     , Svg.path [SvgAttr.d d2, SvgAttr.class "gl-border"] []
+     , Svg.text' [SvgAttr.class "guideline", SvgAttr.x (toString (width+10)), SvgAttr.y (toString (step+4))] [Svg.text (toString scaleStep)]
+     ]
+
+roundScale : Float -> Float -> Float
+roundScale scale value =
+  if scale <= 1 then
+    toFloat (round (value*10)) / 10
+  else if scale <= 10 then
+    round value |> toFloat
+  else
+    round (value/10) * 10 |> toFloat
+
+chartLine : (Float, Float) -> Float -> String
+chartLine (width, height) x =
+  let step = 0.2 * x * height
+  in "M 0 " ++ toString step ++ " L " ++ toString width ++ " " ++ toString step
 
 chartPaths : (Float, Float) -> (Float, Float) -> List (List Float) -> List Svg
 chartPaths size scale values =
@@ -61,7 +95,7 @@ chartPath size (scaleX, scaleY) (values, color) =
          let first = "M " ++ toString fX ++ " " ++ toString fY
              rest' = List.map (\(x, y) -> "L " ++ toString x ++ " " ++ toString y) rest
              values'' = first ++ " " ++ String.join " " rest'
-         in Svg.path [SvgAttr.d values'', Attr.class "line", SvgAttr.stroke color] []
+         in Svg.path [SvgAttr.d values'', SvgAttr.class "data", SvgAttr.stroke color] []
 
 scalePoint : (Float, Float) -> (Float, Float) -> (Float, Float) -> (Float, Float)
 scalePoint (vX, vY) (sX, sY) (pX, pY) =

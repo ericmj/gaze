@@ -75,33 +75,54 @@ decode value =
 
 view : Dict.Dict String (Int, Int) -> Model -> Html
 view elems model =
-  let schedulerSize = Dict.get "schedulers" elems |> Maybe.withDefault (100, 100)
-      memorySize = Dict.get "memory" elems |> Maybe.withDefault (100, 100)
-      ioSize = Dict.get "io" elems |> Maybe.withDefault (100, 100)
+  let schedulerSize = chartSize "schedulers" elems
+      memorySize = chartSize "memory" elems
+      ioSize = chartSize "io" elems
   in div []
        [ div [class "row"]
            [ div [class "col-md-12"]
-              [ Widget.panel (Html.text "Schedulers") (viewSchedulersSvg schedulerSize model) ]
+              [ Widget.panel "Schedulers" [viewSchedulersSvg schedulerSize model] ]
            ]
        , div [class "row"]
            [ div [class "col-md-6"]
-              [ Widget.panel (Html.text "Memory usage (MB)") (viewMemorySvg memorySize model) ]
+              [ Widget.panel "Memory usage (MB)" [viewMemorySvg memorySize model] ]
            , div [class "col-md-6"]
-              [ Widget.panel (Html.text "IO usage (kB)") (viewIOSvg ioSize model) ]
+              [ Widget.panel "IO usage (kB)" [viewIOSvg ioSize model] ]
            ]
        ]
+
+chartSize : String -> Dict.Dict String (Int, Int) -> (Int, Int)
+chartSize id dict =
+  Dict.get id dict |> Maybe.withDefault (100, 100)
 
 viewSchedulersSvg : (Int, Int) -> Model -> Html
 viewSchedulersSvg (x, y) model =
   let size = (toFloat x, toFloat y)
-  in div [] [Widget.chart [id "schedulers"] size (100, 1) model.schedulers]
+      values = List.indexedMap (\x y -> toString (x+1)) model.schedulers
+  in div []
+       [ Widget.chart [id "schedulers"] size (100, 1) model.schedulers
+       , viewLegend values
+       ]
 
 viewMemorySvg : (Int, Int) -> Model -> Html
 viewMemorySvg (x, y) model =
   let size = (toFloat x, toFloat y)
-  in div [] [Widget.autoScaleChart [id "memory"] size 100 model.memory]
+  in div []
+       [ Widget.autoScaleChart [id "memory"] size 100 model.memory
+       , viewLegend ["Total", "Processes", "Atom", "Binary", "Code", "ETS"]
+       ]
 
 viewIOSvg : (Int, Int) -> Model -> Html
 viewIOSvg (x, y) model =
   let size = (toFloat x, toFloat y)
-  in div [] [Widget.autoScaleChart [id "io"] size 100 model.io]
+  in div []
+       [ Widget.autoScaleChart [id "io"] size 100 model.io
+       , viewLegend ["Input", "Output"]
+       ]
+
+viewLegend : List String -> Html
+viewLegend values =
+  let colors = Widget.genColors (List.length values)
+      zip = Util.zip values colors
+      html = List.map (\(name, color') -> Html.span [style [("color", color'), ("margin-right", "7px")]] [text name]) zip
+  in div [] html
