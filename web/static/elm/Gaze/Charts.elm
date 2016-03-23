@@ -7,6 +7,7 @@ import Json.Encode
 import Json.Decode exposing (..)
 import String
 import Dict
+import Gaze.Component as Component
 import Gaze.Widget as Widget
 import Gaze.Util as Util
 import Gaze.Socket as Socket
@@ -26,34 +27,34 @@ model =
   , io = []
   }
 
-navigate : Model -> (Model, Effects ())
-navigate model =
-  if model.joined then
-    (model, Effects.none)
-  else
-    ( {model | joined = True}
-    , Effects.batch
-        [ Socket.joinChannel "charts"
-        , Widget.doTick
-        ]
-    )
-
-tick : Model -> (Model, Effects ())
-tick model =
-  (model, Widget.registerForElemDims ["schedulers", "memory", "io"])
-
-event : Model -> String -> Json.Encode.Value -> Model
-event model event payload =
-  case event of
-    "update" ->
-      let (schedulers, memory, io) = decode payload
-          schedulers' = List.map ((-) 1) schedulers
-      in {model | schedulers = track schedulers' model.schedulers
-                , memory = track memory model.memory
-                , io = track io model.io
-                }
-    _ ->
-      model
+update : Component.Action -> Model -> (Model, Effects ())
+update action model =
+  case action of
+    Component.Navigate ->
+      if model.joined then
+        (model, Effects.none)
+      else
+        ( {model | joined = True}
+        , Effects.batch
+            [ Socket.joinChannel "charts"
+            , Widget.doTick
+            ]
+        )
+    Component.Tick ->
+      (model, Widget.registerForElemDims ["schedulers", "memory", "io"])
+    Component.Event event json ->
+      case event of
+        "update" ->
+          let (schedulers, memory, io) = decode json
+              schedulers' = List.map ((-) 1) schedulers
+          in ( {model | schedulers = track schedulers' model.schedulers
+                    , memory = track memory model.memory
+                    , io = track io model.io
+                    }
+             , Effects.none
+             )
+        _ ->
+          (model, Effects.none)
 
 track : List Float -> List (List Float) -> List (List Float)
 track payload existing =

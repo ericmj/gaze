@@ -8,14 +8,15 @@ import Effects exposing (Effects)
 import Task
 import Dict
 import Json.Encode
+import Gaze.Component as Component
 import Gaze.Widget as Widget
 import Gaze.Socket as Socket
 import Gaze.System as System
 import Gaze.Charts as Charts
 
 type alias Model =
-  { nav : List ComponentId
-  , activeId : ComponentId
+  { nav : List Component.Id
+  , activeId : Component.Id
   , system : System.Model
   , charts : Charts.Model
   , elemDimensions : Dict.Dict String (Int, Int)
@@ -25,13 +26,9 @@ type Action
   = Noop
   | Init
   | Tick
-  | Navigate ComponentId
+  | Navigate Component.Id
   | Event String String Json.Encode.Value
   | ElemDims (List (String, (Int, Int)))
-
-type ComponentId
-  = System
-  | Charts
 
 port tasks : Signal (Task.Task Effects.Never ())
 port tasks =
@@ -77,8 +74,8 @@ init = (model, Effects.none)
 
 model : Model
 model =
-  { nav = [System, Charts]
-  , activeId = System
+  { nav = [Component.System, Component.Charts]
+  , activeId = Component.System
   , system = System.model
   , charts = Charts.model
   , elemDimensions = Dict.empty
@@ -88,56 +85,37 @@ update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     Navigate id ->
-      let (model, effects) = callNavigate {model | activeId = id}
-      in (model, Effects.map (always Noop) effects)
+      let model = {model | activeId = id}
+      in callComponent Component.Navigate id model
     Init ->
-      update (Navigate System) model
+      update (Navigate Component.System) model
     Event channel event payload ->
-      let model = doEvent model channel event payload
-      in (model, Effects.none)
+      let id = Component.stringToId channel
+      in callComponent (Component.Event event payload) id model
     ElemDims dict ->
       ({model | elemDimensions = Dict.fromList dict}, Effects.none)
     Tick ->
-      let (model, effects) = callTick model
-      in (model, Effects.map (always Noop) effects)
+      callComponent Component.Tick model.activeId model
     Noop ->
       (model, Effects.none)
 
-callNavigate : Model -> (Model, Effects ())
-callNavigate model =
-  case model.activeId of
-    System ->
-      let (compModel, effects) = System.navigate model.system
-      in ({model | system = compModel}, effects)
-    Charts ->
-      let (compModel, effects) = Charts.navigate model.charts
-      in ({model | charts = compModel}, effects)
-
-callTick : Model -> (Model, Effects ())
-callTick model =
-  case model.activeId of
-    System ->
-      let (compModel, effects) = System.tick model.system
-      in ({model | system = compModel}, effects)
-    Charts ->
-      let (compModel, effects) = Charts.tick model.charts
-      in ({model | charts = compModel}, effects)
-
-doEvent : Model -> String -> String -> Json.Encode.Value -> Model
-doEvent model channel event payload =
-  case channel of
-    "system" ->
-      {model | system = System.event model.system event payload}
-    "charts" ->
-      {model | charts = Charts.event model.charts event payload}
-    _ ->
-      model
+callComponent : Component.Action -> Component.Id -> Model -> (Model, Effects Action)
+callComponent action id model =
+  let (model, effects) =
+    case id of
+      Component.System ->
+        let (compModel, effects) = System.update action model.system
+        in ({model | system = compModel}, effects)
+      Component.Charts ->
+        let (compModel, effects) = Charts.update action model.charts
+        in ({model | charts = compModel}, effects)
+  in (model, Effects.map (always Noop) effects)
 
 view : Signal.Address Action -> Model -> Html
 view address model =
   div []
     [ viewNav address model
-    , div [class "container"] [viewContainer address model]
+    , div [class "container"] [viewComponent address model]
     ]
 
 inputs : List (Signal Action)
@@ -171,12 +149,12 @@ viewNavLinks address model =
           [ a [onClick address (Navigate nav)] [text (toString nav)] ]
   in List.map mapper model.nav
 
-viewContainer : Signal.Address Action -> Model -> Html
-viewContainer address model =
+viewComponent : Signal.Address Action -> Model -> Html
+viewComponent address model =
   case model.activeId of
-    System ->
+    Component.System ->
       System.view model.elemDimensions model.system
-    Charts ->
+    Component.Charts ->
       Charts.view model.elemDimensions model.charts
 
 uncurry3 : (a -> b -> c -> d) -> (a, b, c) -> d
